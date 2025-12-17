@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 201972729234580602}
   - component: {fileID: 1991122664042643440}
   - component: {fileID: 5175086035790044346}
+  - component: {fileID: 5484661439195884427}
   m_Layer: 0
   m_Name: Enemy
   m_TagString: Untagged
@@ -92,8 +93,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d6d5796a38ed43e4bb94f830c979cb3f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Unit
+  Stats:
+    Health: 100
+    Speed: 3.5
+    AttackDamage: 10
+    AttackRange: 2
+    AttackCooldown: 1
   agent: {fileID: 1991122664042643440}
   isEnemy: 1
+  CurrentTarget: {fileID: 0}
+--- !u!114 &5484661439195884427
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 342222276122090990}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0d7ea948eb58fb64d9815110e92327bf, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::DefaultAttack
+  me: {fileID: 0}
 --- !u!1 &1745031136338299866
 GameObject:
   m_ObjectHideFlags: 0
@@ -160,7 +181,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: fce80ac5148ab624784add5746d67f40, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
