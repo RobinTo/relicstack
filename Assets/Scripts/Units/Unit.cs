@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -28,6 +29,8 @@ public class Unit : MonoBehaviour
 
   private float MaxHealth;
   private float CurrentHealth;
+
+  public Action<Unit> OnKill;
 
   void Start()
   {
@@ -81,14 +84,19 @@ public class Unit : MonoBehaviour
     agent.SetDestination(destination);
   }
 
-  public void TakeDamage(float damage)
+  public bool TakeDamage(float damage)
   {
+    if (CurrentHealth <= 0)
+      return false;
+
     VisualFeedback();
     CurrentHealth -= damage;
     if (CurrentHealth <= 0)
     {
       Die();
+      return true;
     }
+    return false;
   }
 
   private void Die()

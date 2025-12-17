@@ -29,7 +29,11 @@ public class DefaultAttack : MonoBehaviour
   {
     if (target != null)
     {
-      target.TakeDamage(me.Stats.AttackDamage);
+      bool kill = target.TakeDamage(me.Stats.AttackDamage);
+      if (kill)
+      {
+        me.OnKill?.Invoke(target);
+      }
     }
   }
 }

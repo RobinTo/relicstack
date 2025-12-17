@@ -17,7 +17,7 @@ public class UnitProducer : MonoBehaviour
   // Start is called once before the first execution of Update after the MonoBehaviour is created
   void Start()
   {
-
+    relics.Add(new GoldOnKillRelic());
   }
 
   // Update is called once per frame
