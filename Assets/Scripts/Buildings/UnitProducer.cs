@@ -1,15 +1,18 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public class UnitProducer : MonoBehaviour
 {
   [SerializeField]
-  private GameObject prefab;
+  private Unit prefab;
   [SerializeField]
   private Transform productionPoint;
 
   [SerializeField]
   private float productionInterval = 5f;
   private float productionTimer;
+
+  private List<Relic> relics = new List<Relic>();
 
   // Start is called once before the first execution of Update after the MonoBehaviour is created
   void Start()
@@ -30,6 +33,10 @@ public class UnitProducer : MonoBehaviour
 
   private void ProduceUnit()
   {
-    Instantiate(prefab, productionPoint.position, Quaternion.identity);
+    Unit unit = Instantiate(prefab, productionPoint.position, Quaternion.identity);
+    foreach (Relic relic in relics)
+    {
+      relic.Apply(unit);
+    }
   }
 }
