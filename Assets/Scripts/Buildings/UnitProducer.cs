@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UnitProducer : MonoBehaviour
+public class UnitProducer : MonoBehaviour, IInteractable
 {
   [SerializeField]
   private Unit prefab;
@@ -13,6 +13,9 @@ public class UnitProducer : MonoBehaviour
   private float productionTimer;
 
   private List<Relic> relics = new List<Relic>();
+
+  public string InteractableName => "Unit Producer";
+  public string InteractableDescription => "Produces units at regular intervals.";
 
   // Start is called once before the first execution of Update after the MonoBehaviour is created
   void Start()
@@ -38,5 +41,10 @@ public class UnitProducer : MonoBehaviour
     {
       relic.Apply(unit);
     }
+  }
+
+  public void Interact(GameObject interactor)
+  {
+    Debug.Log("Interacted with Unit Producer");
   }
 }

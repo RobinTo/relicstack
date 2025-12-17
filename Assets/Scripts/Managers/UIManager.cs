@@ -6,6 +6,9 @@ public class UIManager : MonoBehaviour
   public static UIManager instance;
   public TMP_Text GoldText;
 
+  [SerializeField]
+  private WorldSpaceTooltip interactTooltip;
+
   public void UpdateGold(int amount)
   {
     GoldText.text = "Gold: " + amount.ToString();
@@ -21,5 +24,15 @@ public class UIManager : MonoBehaviour
     {
       Destroy(gameObject);
     }
+  }
+
+  public void ShowInteractPrompt(string name, string description, Vector3 position)
+  {
+    interactTooltip.ShowTooltip(name, description, position);
+  }
+
+  public void HideInteractPrompt()
+  {
+    interactTooltip.HideTooltip();
   }
 }
