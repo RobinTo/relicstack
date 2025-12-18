@@ -15,6 +15,12 @@ public class Placer : MonoBehaviour
 
   public void Place(IPickupable item)
   {
+    if (placedItem != null)
+    {
+      Debug.LogWarning("Placer already has an item placed.");
+      return;
+    }
+
     Debug.Log("Placed item: " + item.PickupableName);
     GameObject itemGO = (item as MonoBehaviour).gameObject;
     itemGO.transform.position = placePoint.position;

@@ -7,7 +7,6 @@ public class CommanderController : MonoBehaviour
   Transform pickupPoint;
 
   Rigidbody rb;
-  InputSystem_Actions inputActions;
   IInteractable currentInteractableTooltip;
   IPickupable currentPickupableTooltip;
 
@@ -15,20 +14,18 @@ public class CommanderController : MonoBehaviour
 
   void Start()
   {
-    inputActions = new InputSystem_Actions();
-    inputActions.Enable();
     rb = GetComponent<Rigidbody>();
 
-    inputActions.Player.Interact.performed += ActivateInteractables;
-    inputActions.Player.Pickup.performed += PickupItem;
+    InputManager.Instance.Controls.Player.Interact.performed += ActivateInteractables;
+    InputManager.Instance.Controls.Player.Pickup.performed += PickupItem;
   }
 
   private void PickupItem(UnityEngine.InputSystem.InputAction.CallbackContext obj)
   {
     Debug.Log("Pickup action triggered");
-    GameObject pickupGO = (currentPickupableTooltip as MonoBehaviour).gameObject;
     if (carrying == null && currentPickupableTooltip != null)
     {
+      GameObject pickupGO = (currentPickupableTooltip as MonoBehaviour).gameObject;
       carrying = currentPickupableTooltip;
       pickupGO.transform.parent = pickupPoint;
       pickupGO.transform.localPosition = Vector3.zero;
@@ -61,7 +58,7 @@ public class CommanderController : MonoBehaviour
   // Update is called once per frame
   void Update()
   {
-    Vector2 moveInput = inputActions.Player.Move.ReadValue<Vector2>();
+    Vector2 moveInput = InputManager.Instance.Controls.Player.Move.ReadValue<Vector2>();
     Vector3 moveForce = new Vector3(moveInput.x, 0, moveInput.y) * 5f;
     rb.linearVelocity = moveForce;
   }
