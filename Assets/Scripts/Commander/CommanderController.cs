@@ -3,9 +3,16 @@ using UnityEngine;
 
 public class CommanderController : MonoBehaviour
 {
+  [SerializeField]
+  Transform pickupPoint;
+
   Rigidbody rb;
   InputSystem_Actions inputActions;
   IInteractable currentInteractableTooltip;
+  IPickupable currentPickupableTooltip;
+
+  IPickupable carrying;
+
   void Start()
   {
     inputActions = new InputSystem_Actions();
@@ -13,6 +20,34 @@ public class CommanderController : MonoBehaviour
     rb = GetComponent<Rigidbody>();
 
     inputActions.Player.Interact.performed += ActivateInteractables;
+    inputActions.Player.Pickup.performed += PickupItem;
+  }
+
+  private void PickupItem(UnityEngine.InputSystem.InputAction.CallbackContext obj)
+  {
+    Debug.Log("Pickup action triggered");
+    GameObject pickupGO = (currentPickupableTooltip as MonoBehaviour).gameObject;
+    if (carrying == null && currentPickupableTooltip != null)
+    {
+      carrying = currentPickupableTooltip;
+      pickupGO.transform.parent = pickupPoint;
+      pickupGO.transform.localPosition = Vector3.zero;
+      UIManager.instance.HidePickupPrompt();
+    }
+    else
+    {
+      DropItem();
+    }
+  }
+
+  private void DropItem()
+  {
+    if (carrying != null)
+    {
+      GameObject pickupGO = (carrying as MonoBehaviour).gameObject;
+      carrying = null;
+      pickupGO.transform.parent = null;
+    }
   }
 
   private void ActivateInteractables(UnityEngine.InputSystem.InputAction.CallbackContext obj)
@@ -39,6 +74,13 @@ public class CommanderController : MonoBehaviour
       UIManager.instance.ShowInteractPrompt(interactable.InteractableName, interactable.InteractableDescription, other.transform.position + Vector3.up * 2f);
       currentInteractableTooltip = interactable;
     }
+
+    IPickupable pickupable = other.GetComponent<IPickupable>();
+    if (pickupable != null)
+    {
+      UIManager.instance.ShowPickupPrompt(pickupable.PickupableName, pickupable.PickupableDescription, other.transform.position + Vector3.up * 2f);
+      currentPickupableTooltip = pickupable;
+    }
   }
 
   void OnTriggerExit(Collider other)
@@ -49,5 +91,30 @@ public class CommanderController : MonoBehaviour
       currentInteractableTooltip = null;
       UIManager.instance.HideInteractPrompt();
     }
+
+    IPickupable pickupable = other.GetComponent<IPickupable>();
+    if (pickupable == currentPickupableTooltip)
+    {
+      currentPickupableTooltip = null;
+      UIManager.instance.HidePickupPrompt();
+    }
+  }
+
+  public void HandlePlacerEnter(Collider other)
+  {
+    if (carrying != null)
+    {
+      Placer placer = other.GetComponent<Placer>();
+      if (placer != null)
+      {
+        placer.Place(carrying);
+        carrying = null;
+      }
+    }
+  }
+
+  public void HandlePlacerExit(Collider other)
+  {
+
   }
 }

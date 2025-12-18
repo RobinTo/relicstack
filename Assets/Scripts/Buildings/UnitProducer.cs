@@ -12,6 +12,8 @@ public class UnitProducer : MonoBehaviour, IInteractable
   private float productionInterval = 5f;
   private float productionTimer;
 
+  [SerializeField]
+  private List<Placer> relicPlacers = new List<Placer>();
   private List<Relic> relics = new List<Relic>();
 
   public string InteractableName => "Unit Producer";
@@ -20,7 +22,32 @@ public class UnitProducer : MonoBehaviour, IInteractable
   // Start is called once before the first execution of Update after the MonoBehaviour is created
   void Start()
   {
-    relics.Add(new GoldOnKillRelic());
+    foreach (Placer placer in relicPlacers)
+    {
+      placer.OnPlacedItemChanged += (GameObject itemGO) =>
+      {
+        UpdateRelics();
+      };
+    }
+    UpdateRelics();
+  }
+
+  private void UpdateRelics()
+  {
+    relics.Clear();
+    foreach (Placer placer in relicPlacers)
+    {
+      if (placer.PlacedItem == null)
+      {
+        continue;
+      }
+      GameObject go = (placer.PlacedItem as MonoBehaviour).gameObject;
+      Relic relic = go.GetComponent<Relic>();
+      if (relic != null)
+      {
+        relics.Add(relic);
+      }
+    }
   }
 
   // Update is called once per frame

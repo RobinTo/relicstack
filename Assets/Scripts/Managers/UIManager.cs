@@ -9,6 +9,9 @@ public class UIManager : MonoBehaviour
   [SerializeField]
   private WorldSpaceTooltip interactTooltip;
 
+  [SerializeField]
+  private WorldSpaceTooltip pickupTooltip;
+
   public void UpdateGold(int amount)
   {
     GoldText.text = "Gold: " + amount.ToString();
@@ -34,5 +37,15 @@ public class UIManager : MonoBehaviour
   public void HideInteractPrompt()
   {
     interactTooltip.HideTooltip();
+  }
+
+  public void ShowPickupPrompt(string name, string description, Vector3 position)
+  {
+    pickupTooltip.ShowTooltip(name, description, position);
+  }
+
+  public void HidePickupPrompt()
+  {
+    pickupTooltip.HideTooltip();
   }
 }
