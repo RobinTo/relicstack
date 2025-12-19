@@ -3,8 +3,13 @@ using UnityEngine;
 public class Player : MonoBehaviour
 {
   public static Player instance;
-  private int gold = 0;
+  private int gold = 10;
   public int Gold => gold;
+
+  void Start()
+  {
+    UIManager.instance.UpdateGold(gold);
+  }
 
   public void AddGold(int amount)
   {

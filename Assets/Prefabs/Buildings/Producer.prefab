@@ -476,7 +476,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c54d9108a3a1fa1489652d69fe6948ad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::UnitProducer
-  prefab: {fileID: 0}
+  prefab: {fileID: 8012198797526984251, guid: 193629b082d11204b85a8f030e979140, type: 3}
   productionPoint: {fileID: 8195768784572850094}
   productionInterval: 5
   relicPlacers:
