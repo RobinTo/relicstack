@@ -12,6 +12,17 @@ public class UnitStats
   public float AttackDamage = 10f;
   public float AttackRange = 2f;
   public float AttackCooldown = 1f;
+  public TargetMode TargetMode;
+}
+
+public enum TargetMode
+{
+  Closest,
+  HighestRange,
+  LowestHealth,
+  HighestHealth,
+  IgnoreUnits, // Only for enemies
+
 }
 
 public class Unit : MonoBehaviour
@@ -24,6 +35,7 @@ public class Unit : MonoBehaviour
 
   [SerializeField]
   private bool isEnemy;
+  public bool IsEnemy => isEnemy;
 
   public Unit CurrentTarget;
 
@@ -67,20 +79,13 @@ public class Unit : MonoBehaviour
     }
     else
     {
-      List<Unit> targetList = isEnemy ? GameManager.instance.PlayerUnits : GameManager.instance.EnemyUnits;
-      float closestDistance = float.MaxValue;
-      Unit closestUnit = null;
-      foreach (Unit unit in targetList)
-      {
-        float distance = Vector3.Distance(transform.position, unit.transform.position);
-        if (distance < closestDistance)
-        {
-          closestDistance = distance;
-          closestUnit = unit;
-        }
-      }
+      CurrentTarget = FindNewTarget();
+    }
 
-      CurrentTarget = closestUnit;
+    if (isEnemy && CurrentTarget == null && Headquarters.instance != null)
+    {
+      agent.isStopped = false;
+      agent.SetDestination(Headquarters.instance.transform.position);
     }
   }
 
@@ -106,6 +111,11 @@ public class Unit : MonoBehaviour
 
   private void Die()
   {
+    Destroy(gameObject);
+  }
+
+  void OnDestroy()
+  {
     if (isEnemy)
     {
       GameManager.instance.EnemyUnits.Remove(this);
@@ -114,7 +124,6 @@ public class Unit : MonoBehaviour
     {
       GameManager.instance.PlayerUnits.Remove(this);
     }
-    Destroy(gameObject);
   }
 
 
@@ -149,5 +158,95 @@ public class Unit : MonoBehaviour
     Gizmos.color = Color.red;
     if (CurrentTarget != null)
       Gizmos.DrawLine(transform.position + Vector3.up * 0.5f, CurrentTarget.transform.position + Vector3.up * 0.5f);
+  }
+
+  private Unit FindNewTarget()
+  {
+    List<Unit> targetList = isEnemy ? GameManager.instance.PlayerUnits : GameManager.instance.EnemyUnits;
+
+    if (targetList.Count == 0)
+      return null;
+
+    switch (Stats.TargetMode)
+    {
+      case TargetMode.Closest:
+        return FindClosestTarget(targetList);
+
+      case TargetMode.HighestRange:
+        return FindHighestRangeTarget(targetList);
+
+      case TargetMode.LowestHealth:
+        return FindLowestHealthTarget(targetList);
+
+      case TargetMode.HighestHealth:
+        return FindHighestHealthTarget(targetList);
+
+      case TargetMode.IgnoreUnits:
+        return null;
+
+      default:
+        return FindClosestTarget(targetList);
+    }
+  }
+
+  private Unit FindClosestTarget(List<Unit> targetList)
+  {
+    float closestDistance = float.MaxValue;
+    Unit closestUnit = null;
+    foreach (Unit unit in targetList)
+    {
+      float distance = Vector3.Distance(transform.position, unit.transform.position);
+      if (distance < closestDistance)
+      {
+        closestDistance = distance;
+        closestUnit = unit;
+      }
+    }
+    return closestUnit;
+  }
+
+  private Unit FindHighestRangeTarget(List<Unit> targetList)
+  {
+    float highestRange = float.MinValue;
+    Unit targetUnit = null;
+    foreach (Unit unit in targetList)
+    {
+      if (unit.Stats.AttackRange > highestRange)
+      {
+        highestRange = unit.Stats.AttackRange;
+        targetUnit = unit;
+      }
+    }
+    return targetUnit;
+  }
+
+  private Unit FindLowestHealthTarget(List<Unit> targetList)
+  {
+    float lowestHealth = float.MaxValue;
+    Unit targetUnit = null;
+    foreach (Unit unit in targetList)
+    {
+      if (unit.CurrentHealth < lowestHealth)
+      {
+        lowestHealth = unit.CurrentHealth;
+        targetUnit = unit;
+      }
+    }
+    return targetUnit;
+  }
+
+  private Unit FindHighestHealthTarget(List<Unit> targetList)
+  {
+    float highestHealth = float.MinValue;
+    Unit targetUnit = null;
+    foreach (Unit unit in targetList)
+    {
+      if (unit.CurrentHealth > highestHealth)
+      {
+        highestHealth = unit.CurrentHealth;
+        targetUnit = unit;
+      }
+    }
+    return targetUnit;
   }
 }
