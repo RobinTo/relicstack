@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class ProjectileAttack : MonoBehaviour
@@ -30,9 +31,17 @@ public class ProjectileAttack : MonoBehaviour
   {
     if (target != null)
     {
-      Projectile projectile = Instantiate(Prefab, me.transform.position + Vector3.up, Quaternion.identity);
-      projectile.OwnerUnit = me;
-      projectile.TargetUnit = target;
+      me.Animator.SetTrigger("Attack");
+      StartCoroutine(CastAfter(.25f, target, me.Stats.AttackDamage));
     }
+  }
+
+  IEnumerator CastAfter(float time, Unit target, float damage)
+  {
+    yield return new WaitForSeconds(time);
+
+    Projectile projectile = Instantiate(Prefab, me.transform.position + Vector3.up, Quaternion.identity);
+    projectile.OwnerUnit = me;
+    projectile.TargetUnit = target;
   }
 }

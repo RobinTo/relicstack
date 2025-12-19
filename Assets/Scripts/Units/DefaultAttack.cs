@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public class DefaultAttack : MonoBehaviour
@@ -29,11 +30,18 @@ public class DefaultAttack : MonoBehaviour
   {
     if (target != null)
     {
-      bool kill = target.TakeDamage(me.Stats.AttackDamage);
-      if (kill)
-      {
-        me.OnKill?.Invoke(target);
-      }
+      me.Animator.SetTrigger("Attack");
+      StartCoroutine(DealDamageAfter(.25f, target, me.Stats.AttackDamage));
+    }
+  }
+
+  IEnumerator DealDamageAfter(float time, Unit target, float damage)
+  {
+    yield return new WaitForSeconds(time);
+    bool kill = target.TakeDamage(damage);
+    if (kill)
+    {
+      me.OnKill?.Invoke(target);
     }
   }
 }

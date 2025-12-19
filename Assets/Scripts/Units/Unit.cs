@@ -31,6 +31,8 @@ public class Unit : MonoBehaviour
   private float CurrentHealth;
 
   public Action<Unit> OnKill;
+  private Animator animator;
+  public Animator Animator => animator;
 
   void Start()
   {
@@ -44,6 +46,7 @@ public class Unit : MonoBehaviour
     }
     MaxHealth = Stats.Health;
     CurrentHealth = MaxHealth;
+    animator = GetComponent<Animator>();
   }
 
   void Update()
@@ -54,10 +57,12 @@ public class Unit : MonoBehaviour
       {
         agent.isStopped = false;
         agent.SetDestination(CurrentTarget.transform.position);
+        animator.SetBool("Walking", true);
       }
       else
       {
         agent.isStopped = true;
+        animator.SetBool("Walking", false);
       }
     }
     else
