@@ -8,6 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/HeroBased/Combat.unity
+    guid: 3d9d16449d20a744497a63a6a80f9f73
+  - enabled: 1
+    path: Assets/Scenes/HeroBased/Overworld.unity
+    guid: 666a536796ed5c04982b0efcc6305380
+  - enabled: 1
+    path: Assets/Scenes/HeroBased/Shop.unity
+    guid: b5ae50953092bd347878dd4d66f48846
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

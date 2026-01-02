@@ -5,10 +5,9 @@ using UnityEngine;
 using UnityEngine.AI;
 
 [System.Serializable]
-public class UnitStats
+public class HeroUnitStats
 {
   public float Health = 100f;
-  public int MaxMana = 100;
   public float Speed = 3.5f;
   public float AttackDamage = 10f;
   public float AttackRange = 2f;
@@ -16,7 +15,14 @@ public class UnitStats
   public TargetMode TargetMode;
 }
 
-public enum TargetMode
+
+[System.Serializable]
+public class HeroUnitConfig
+{
+  public float AttackAnimationLength = 0.75f;
+}
+
+public enum HeroTargetMode
 {
   Closest,
   HighestRange,
@@ -26,10 +32,29 @@ public enum TargetMode
 
 }
 
-public class Unit : MonoBehaviour
+public enum HeroUnitState
+{
+  Not_started,
+  Idle,
+  Moving,
+  Attacking,
+  Casting,
+  Dead,
+}
+
+public class HeroUnit : MonoBehaviour
 {
   [SerializeField]
+  HeroUnitState unitState = HeroUnitState.Idle;
+  [SerializeField]
   public UnitStats Stats;
+  [SerializeField]
+  public HeroUnitConfig Config;
+
+  [SerializeField]
+  public Health Health;
+  [SerializeField]
+  public Mana Mana;
 
   [SerializeField]
   private NavMeshAgent agent;
@@ -38,32 +63,111 @@ public class Unit : MonoBehaviour
   private bool isEnemy;
   public bool IsEnemy => isEnemy;
 
-  public Unit CurrentTarget;
+  public HeroUnit CurrentTarget;
 
-  private float MaxHealth;
-  private float CurrentHealth;
-
-  public Action<Unit> OnKill;
+  public Action<HeroUnit> OnKill;
   private Animator animator;
   public Animator Animator => animator;
+
+  private float lastTargetCheckTime;
+
+  [Header("States")]
+  public Casting castingState;
+  public Attack attackState;
 
   void Start()
   {
     if (isEnemy)
     {
-      GameManager.instance.EnemyUnits.Add(this);
+      HeroCombatManager.instance.EnemyUnits.Add(this);
     }
     else
     {
-      GameManager.instance.PlayerUnits.Add(this);
+      HeroCombatManager.instance.PlayerUnits.Add(this);
     }
-    MaxHealth = Stats.Health;
-    CurrentHealth = MaxHealth;
+    Health.Initialize(Stats.Health);
+    Health.OnTakeDamage += StartVisualDamageFeedback;
+    Health.OnDeath += Die;
     animator = GetComponent<Animator>();
+    StartCombat();
   }
 
-  void Update()
+
+  private void StartCombat()
   {
+    FindNextCombatState();
+  }
+
+  public void GoToState(HeroUnitState newState)
+  {
+    unitState = newState;
+  }
+
+  public void FindNextCombatState()
+  {
+
+    if (CurrentTarget == null || Time.time - lastTargetCheckTime > 1f)
+    {
+      CurrentTarget = FindNewTarget();
+    }
+
+    if (CurrentTarget != null)
+    {
+      if (InRange())
+      {
+        if (Mana && Mana.FullMana)
+        {
+          Debug.Log("Full mana, casting spell");
+          GoToState(HeroUnitState.Casting);
+        }
+        else if (attackState.IsReadyToAttack())
+        {
+          GoToState(HeroUnitState.Attacking);
+        }
+        else
+        {
+          GoToState(HeroUnitState.Idle);
+        }
+      }
+      else
+      {
+        GoToState(HeroUnitState.Moving);
+      }
+    }
+    else
+    {
+      GoToState(HeroUnitState.Idle);
+    }
+  }
+
+
+  public void Update()
+  {
+    switch (unitState)
+    {
+      case HeroUnitState.Idle:
+        UpdateIdle();
+        break;
+      case HeroUnitState.Moving:
+        UpdateMoving();
+        break;
+      case HeroUnitState.Attacking:
+        UpdateAttacking();
+        break;
+      case HeroUnitState.Casting:
+        UpdateCasting();
+        break;
+    }
+  }
+
+  void UpdateIdle()
+  {
+    FindNextCombatState();
+  }
+
+  void UpdateMoving()
+  {
+
     if (CurrentTarget != null)
     {
       if (Vector3.Distance(transform.position, CurrentTarget.transform.position) > Stats.AttackRange)
@@ -76,18 +180,19 @@ public class Unit : MonoBehaviour
       {
         agent.isStopped = true;
         animator.SetBool("Walking", false);
+        FindNextCombatState();
       }
     }
-    else
-    {
-      CurrentTarget = FindNewTarget();
-    }
+  }
 
-    if (isEnemy && CurrentTarget == null && Headquarters.instance != null)
-    {
-      agent.isStopped = false;
-      agent.SetDestination(Headquarters.instance.transform.position);
-    }
+  void UpdateAttacking()
+  {
+    attackState.UpdateAttack();
+  }
+
+  void UpdateCasting()
+  {
+    castingState.UpdateCasting();
   }
 
   public void MoveTo(Vector3 destination)
@@ -95,19 +200,10 @@ public class Unit : MonoBehaviour
     agent.SetDestination(destination);
   }
 
-  public bool TakeDamage(float damage)
-  {
-    if (CurrentHealth <= 0)
-      return false;
 
+  private void StartVisualDamageFeedback()
+  {
     VisualFeedback();
-    CurrentHealth -= damage;
-    if (CurrentHealth <= 0)
-    {
-      Die();
-      return true;
-    }
-    return false;
   }
 
   private void Die()
@@ -119,11 +215,11 @@ public class Unit : MonoBehaviour
   {
     if (isEnemy)
     {
-      GameManager.instance.EnemyUnits.Remove(this);
+      HeroCombatManager.instance.EnemyUnits.Remove(this);
     }
     else
     {
-      GameManager.instance.PlayerUnits.Remove(this);
+      HeroCombatManager.instance.PlayerUnits.Remove(this);
     }
   }
 
@@ -161,9 +257,9 @@ public class Unit : MonoBehaviour
       Gizmos.DrawLine(transform.position + Vector3.up * 0.5f, CurrentTarget.transform.position + Vector3.up * 0.5f);
   }
 
-  private Unit FindNewTarget()
+  private HeroUnit FindNewTarget()
   {
-    List<Unit> targetList = isEnemy ? GameManager.instance.PlayerUnits : GameManager.instance.EnemyUnits;
+    List<HeroUnit> targetList = isEnemy ? HeroCombatManager.instance.PlayerUnits : HeroCombatManager.instance.EnemyUnits;
 
     if (targetList.Count == 0)
       return null;
@@ -190,11 +286,11 @@ public class Unit : MonoBehaviour
     }
   }
 
-  private Unit FindClosestTarget(List<Unit> targetList)
+  private HeroUnit FindClosestTarget(List<HeroUnit> targetList)
   {
     float closestDistance = float.MaxValue;
-    Unit closestUnit = null;
-    foreach (Unit unit in targetList)
+    HeroUnit closestUnit = null;
+    foreach (HeroUnit unit in targetList)
     {
       float distance = Vector3.Distance(transform.position, unit.transform.position);
       if (distance < closestDistance)
@@ -206,11 +302,11 @@ public class Unit : MonoBehaviour
     return closestUnit;
   }
 
-  private Unit FindHighestRangeTarget(List<Unit> targetList)
+  private HeroUnit FindHighestRangeTarget(List<HeroUnit> targetList)
   {
     float highestRange = float.MinValue;
-    Unit targetUnit = null;
-    foreach (Unit unit in targetList)
+    HeroUnit targetUnit = null;
+    foreach (HeroUnit unit in targetList)
     {
       if (unit.Stats.AttackRange > highestRange)
       {
@@ -221,33 +317,38 @@ public class Unit : MonoBehaviour
     return targetUnit;
   }
 
-  private Unit FindLowestHealthTarget(List<Unit> targetList)
+  private HeroUnit FindLowestHealthTarget(List<HeroUnit> targetList)
   {
     float lowestHealth = float.MaxValue;
-    Unit targetUnit = null;
-    foreach (Unit unit in targetList)
+    HeroUnit targetUnit = null;
+    foreach (HeroUnit unit in targetList)
     {
-      if (unit.CurrentHealth < lowestHealth)
+      if (unit.Health.CurrentHealth < lowestHealth)
       {
-        lowestHealth = unit.CurrentHealth;
+        lowestHealth = unit.Health.CurrentHealth;
         targetUnit = unit;
       }
     }
     return targetUnit;
   }
 
-  private Unit FindHighestHealthTarget(List<Unit> targetList)
+  private HeroUnit FindHighestHealthTarget(List<HeroUnit> targetList)
   {
     float highestHealth = float.MinValue;
-    Unit targetUnit = null;
-    foreach (Unit unit in targetList)
+    HeroUnit targetUnit = null;
+    foreach (HeroUnit unit in targetList)
     {
-      if (unit.CurrentHealth > highestHealth)
+      if (unit.Health.CurrentHealth > highestHealth)
       {
-        highestHealth = unit.CurrentHealth;
+        highestHealth = unit.Health.CurrentHealth;
         targetUnit = unit;
       }
     }
     return targetUnit;
+  }
+
+  public bool InRange()
+  {
+    return Vector3.Distance(transform.position, CurrentTarget.transform.position) <= Stats.AttackRange;
   }
 }
